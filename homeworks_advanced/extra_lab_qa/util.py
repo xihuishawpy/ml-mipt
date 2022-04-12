@@ -73,15 +73,15 @@ class SQuAD(data.Dataset):
 
     def __getitem__(self, idx):
         idx = self.valid_idxs[idx]
-        example = (self.context_idxs[idx],
-                   self.context_char_idxs[idx],
-                   self.question_idxs[idx],
-                   self.question_char_idxs[idx],
-                   self.y1s[idx],
-                   self.y2s[idx],
-                   self.ids[idx])
-
-        return example
+        return (
+            self.context_idxs[idx],
+            self.context_char_idxs[idx],
+            self.question_idxs[idx],
+            self.question_char_idxs[idx],
+            self.y1s[idx],
+            self.y2s[idx],
+            self.ids[idx],
+        )
 
     def __len__(self):
         return len(self.valid_idxs)
@@ -301,11 +301,7 @@ class CheckpointSaver:
             self._print(f'New best checkpoint at step {step}...')
 
         # Add checkpoint path to priority queue (lowest priority removed first)
-        if self.maximize_metric:
-            priority_order = metric_val
-        else:
-            priority_order = -metric_val
-
+        priority_order = metric_val if self.maximize_metric else -metric_val
         self.ckpt_paths.put((priority_order, checkpoint_path))
 
         # Remove a checkpoint if more than max_checkpoints have been saved
@@ -354,7 +350,7 @@ def get_available_devices():
     """
     gpu_ids = []
     if torch.cuda.is_available():
-        gpu_ids += [gpu_id for gpu_id in range(torch.cuda.device_count())]
+        gpu_ids += list(range(torch.cuda.device_count()))
         device = torch.device(f'cuda:{gpu_ids[0]}')
         torch.cuda.set_device(device)
     else:
@@ -381,9 +377,7 @@ def masked_softmax(logits, mask, dim=-1, log_softmax=False):
     mask = mask.type(torch.float32)
     masked_logits = mask * logits + (1 - mask) * -1e30
     softmax_fn = F.log_softmax if log_softmax else F.softmax
-    probs = softmax_fn(masked_logits, dim)
-
-    return probs
+    return softmax_fn(masked_logits, dim)
 
 
 def visualize(tbx, pred_dict, eval_path, step, split, num_visuals):
@@ -399,9 +393,7 @@ def visualize(tbx, pred_dict, eval_path, step, split, num_visuals):
     """
     if num_visuals <= 0:
         return
-    if num_visuals > len(pred_dict):
-        num_visuals = len(pred_dict)
-
+    num_visuals = min(num_visuals, len(pred_dict))
     visual_ids = np.random.choice(list(pred_dict), size=num_visuals, replace=False)
 
     with open(eval_path, 'r') as eval_file:
@@ -498,8 +490,6 @@ def get_logger(log_dir, name):
                 self.flush()
             except (KeyboardInterrupt, SystemExit):
                 raise
-            except:
-                self.handleError(record)
 
     # Create logger
     logger = logging.getLogger(name)
@@ -542,9 +532,7 @@ def torch_from_json(path, dtype=torch.float32):
     with open(path, 'r') as fh:
         array = np.array(json.load(fh))
 
-    tensor = torch.from_numpy(array).type(dtype)
-
-    return tensor
+    return torch.from_numpy(array).type(dtype)
 
 
 def discretize(p_start, p_end, max_len=15, no_answer=False):
@@ -700,9 +688,7 @@ def normalize_answer(s):
 
 
 def get_tokens(s):
-    if not s:
-        return []
-    return normalize_answer(s).split()
+    return normalize_answer(s).split() if s else []
 
 
 def compute_em(a_gold, a_pred):
@@ -721,5 +707,4 @@ def compute_f1(a_gold, a_pred):
         return 0
     precision = 1.0 * num_same / len(pred_toks)
     recall = 1.0 * num_same / len(gold_toks)
-    f1 = (2 * precision * recall) / (precision + recall)
-    return f1
+    return (2 * precision * recall) / (precision + recall)

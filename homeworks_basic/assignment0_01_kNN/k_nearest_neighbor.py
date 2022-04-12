@@ -110,7 +110,6 @@ class KNearestNeighbor:
         """
         num_test = X.shape[0]
         num_train = self.X_train.shape[0]
-        dists = np.zeros((num_test, num_train))
         #########################################################################
         # TODO:                                                                 #
         # Compute the l2 distance between all test points and all training      #
@@ -127,7 +126,7 @@ class KNearestNeighbor:
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-        return dists
+        return np.zeros((num_test, num_train))
 
     def predict_labels(self, dists, k=1):
         """

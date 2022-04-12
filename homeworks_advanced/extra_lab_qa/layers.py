@@ -154,9 +154,7 @@ class BiDAFAttention(nn.Module):
         # (bs, c_len, c_len) x (bs, c_len, hid_size) => (bs, c_len, hid_size)
         b = torch.bmm(torch.bmm(s1, s2.transpose(1, 2)), c)
 
-        x = torch.cat([c, a, c * a, c * b], dim=2)  # (bs, c_len, 4 * hid_size)
-
-        return x
+        return torch.cat([c, a, c * a, c * b], dim=2)
 
     def get_similarity_matrix(self, c, q):
         """Get the "similarity matrix" between context and query (using the
@@ -178,9 +176,7 @@ class BiDAFAttention(nn.Module):
         s1 = torch.matmul(q, self.q_weight).transpose(1, 2)\
                                            .expand([-1, c_len, -1])
         s2 = torch.matmul(c * self.cq_weight, q.transpose(1, 2))
-        s = s0 + s1 + s2 + self.bias
-
-        return s
+        return s0 + s1 + s2 + self.bias
 
 
 class BiDAFOutput(nn.Module):

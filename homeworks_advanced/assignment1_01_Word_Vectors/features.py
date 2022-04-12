@@ -30,9 +30,6 @@ class BoW(TransformerMixin):
         # store most frequent tokens in self.bow
         raise NotImplementedError
 
-        # fit method must always return self
-        return self
-
     def _text_to_bow(self, text: str) -> np.ndarray:
         """
         convert text string to an array of token counts. Use self.bow.
@@ -42,7 +39,6 @@ class BoW(TransformerMixin):
 
         result = None
         raise NotImplementedError
-        return np.array(result, "float32")
 
     def transform(self, X: np.ndarray, y=None) -> np.ndarray:
         """
@@ -82,9 +78,6 @@ class TfIdf(TransformerMixin):
         """
         raise NotImplementedError
 
-        # fit method must always return self
-        return self
-
     def _text_to_tf_idf(self, text: str) -> np.ndarray:
         """
         convert text string to an array tf-idfs.
@@ -95,7 +88,6 @@ class TfIdf(TransformerMixin):
 
         result = None
         raise NotImplementedError
-        return np.array(result, "float32")
 
     def transform(self, X: np.ndarray, y=None) -> np.ndarray:
         """

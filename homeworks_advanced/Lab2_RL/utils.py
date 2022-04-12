@@ -10,8 +10,7 @@ def get_cum_discounted_rewards(rewards, gamma):
     evaluates cumulative discounted rewards:
     r_t + gamma * r_{t+1} + gamma^2 * r_{t_2} + ...
     """
-    cum_rewards = []
-    cum_rewards.append(rewards[-1])
+    cum_rewards = [rewards[-1]]
     for r in reversed(rewards[:-1]):
         cum_rewards.insert(0, r + gamma * cum_rewards[0])
     return cum_rewards
@@ -48,17 +47,15 @@ def play_and_log_episode(env, agent, gamma=0.99, t_max=10000):
 
     v_mc = get_cum_discounted_rewards(rewards, gamma)
 
-    return_pack = {
+    return {
         'states': np.array(states),
         'v_mc': np.array(v_mc),
         'v_agent': np.array(v_agent),
         'q_spreads': np.array(q_spreads),
         'td_errors': np.array(td_errors),
         'rewards': np.array(rewards),
-        'episode_finished': np.array(done)
+        'episode_finished': np.array(done),
     }
-
-    return return_pack
 
 
 def img_by_obs(obs, state_dim):

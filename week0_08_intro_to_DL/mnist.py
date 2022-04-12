@@ -14,7 +14,7 @@ def load_dataset(flatten=False):
         from urllib.request import urlretrieve
 
     def download(filename, source='http://yann.lecun.com/exdb/mnist/'):
-        print("Downloading %s" % filename)
+        print(f"Downloading {filename}")
         urlretrieve(source + filename, filename)
 
     # We then define functions for loading MNIST images and labels.
