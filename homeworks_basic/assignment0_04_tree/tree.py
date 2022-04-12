@@ -114,8 +114,11 @@ class DecisionTree(BaseEstimator):
     def __init__(self, n_classes=None, max_depth=np.inf, min_samples_split=2, 
                  criterion_name='gini', debug=False):
 
-        assert criterion_name in self.all_criterions.keys(), 'Criterion name must be on of the following: {}'.format(self.all_criterions.keys())
-        
+        assert (
+            criterion_name in self.all_criterions.keys()
+        ), f'Criterion name must be on of the following: {self.all_criterions.keys()}'
+
+
         self.n_classes = n_classes
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split

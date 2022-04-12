@@ -123,10 +123,12 @@ def process_file(filename, data_type, word_counter, char_counter, nlp):
                         answer_start = answer['answer_start']
                         answer_end = answer_start + len(answer_text)
                         answer_texts.append(answer_text)
-                        answer_span = []
-                        for idx, span in enumerate(spans):
-                            if not (answer_end <= span[0] or answer_start >= span[1]):
-                                answer_span.append(idx)
+                        answer_span = [
+                            idx
+                            for idx, span in enumerate(spans)
+                            if answer_end > span[0] and answer_start < span[1]
+                        ]
+
                         y1, y2 = answer_span[0], answer_span[-1]
                         y1s.append(y1)
                         y2s.append(y2)
@@ -151,18 +153,17 @@ def get_embedding(counter, data_type, limit=-1, emb_file=None, vec_size=None, nu
     print(f"Pre-processing {data_type} vectors...")
     embedding_dict = {}
     filtered_elements = [k for k, v in counter.items() if v > limit]
+    assert vec_size is not None
     if emb_file is not None:
-        assert vec_size is not None
         with open(emb_file, "r", encoding="utf-8") as fh:
             for line in tqdm(fh, total=num_vectors):
                 array = line.split()
-                word = "".join(array[0:-vec_size])
+                word = "".join(array[:-vec_size])
                 vector = list(map(float, array[-vec_size:]))
                 if word in counter and counter[word] > limit:
                     embedding_dict[word] = vector
         print(f"{len(embedding_dict)} / {len(filtered_elements)} tokens have corresponding {data_type} embedding vector")
     else:
-        assert vec_size is not None
         for token in filtered_elements:
             embedding_dict[token] = [np.random.normal(
                 scale=0.1) for _ in range(vec_size)]
@@ -208,15 +209,17 @@ def convert_to_features(args, data, word2idx_dict, char2idx_dict, is_test):
     ques_char_idxs = np.zeros([ques_limit, char_limit], dtype=np.int32)
 
     def _get_word(word):
-        for each in (word, word.lower(), word.capitalize(), word.upper()):
-            if each in word2idx_dict:
-                return word2idx_dict[each]
-        return 1
+        return next(
+            (
+                word2idx_dict[each]
+                for each in (word, word.lower(), word.capitalize(), word.upper())
+                if each in word2idx_dict
+            ),
+            1,
+        )
 
     def _get_char(char):
-        if char in char2idx_dict:
-            return char2idx_dict[char]
-        return 1
+        return char2idx_dict[char] if char in char2idx_dict else 1
 
     for i, token in enumerate(example["context_tokens"]):
         context_idxs[i] = _get_word(token)
@@ -250,15 +253,13 @@ def build_features(args, examples, data_type, out_file, word2idx_dict, char2idx_
     char_limit = args.char_limit
 
     def drop_example(ex, is_test_=False):
-        if is_test_:
-            drop = False
-        else:
-            drop = len(ex["context_tokens"]) > para_limit or \
-                   len(ex["ques_tokens"]) > ques_limit or \
-                   (is_answerable(ex) and
-                    ex["y2s"][0] - ex["y1s"][0] > ans_limit)
-
-        return drop
+        return (
+            False
+            if is_test_
+            else len(ex["context_tokens"]) > para_limit
+            or len(ex["ques_tokens"]) > ques_limit
+            or (is_answerable(ex) and ex["y2s"][0] - ex["y1s"][0] > ans_limit)
+        )
 
     print(f"Converting {data_type} examples to indices...")
     total = 0
@@ -280,15 +281,17 @@ def build_features(args, examples, data_type, out_file, word2idx_dict, char2idx_
         total += 1
 
         def _get_word(word):
-            for each in (word, word.lower(), word.capitalize(), word.upper()):
-                if each in word2idx_dict:
-                    return word2idx_dict[each]
-            return 1
+            return next(
+                (
+                    word2idx_dict[each]
+                    for each in (word, word.lower(), word.capitalize(), word.upper())
+                    if each in word2idx_dict
+                ),
+                1,
+            )
 
         def _get_char(char):
-            if char in char2idx_dict:
-                return char2idx_dict[char]
-            return 1
+            return char2idx_dict[char] if char in char2idx_dict else 1
 
         context_idx = np.zeros([para_limit], dtype=np.int32)
         context_char_idx = np.zeros([para_limit, char_limit], dtype=np.int32)
@@ -391,6 +394,6 @@ if __name__ == '__main__':
     if args_.include_test_examples:
         args_.test_file = url_to_data_path(args_.test_url)
     glove_dir = url_to_data_path(args_.glove_url.replace('.zip', ''))
-    glove_ext = f'.txt' if glove_dir.endswith('d') else f'.{args_.glove_dim}d.txt'
+    glove_ext = '.txt' if glove_dir.endswith('d') else f'.{args_.glove_dim}d.txt'
     args_.glove_file = os.path.join(glove_dir, os.path.basename(glove_dir) + glove_ext)
     pre_process(args_)

@@ -206,8 +206,7 @@ class Sequential(Module):
         return [x.getGradParameters() for x in self.modules]
 
     def __repr__(self):
-        string = "".join([str(x) + '\n' for x in self.modules])
-        return string
+        return "".join([str(x) + '\n' for x in self.modules])
 
     def __getitem__(self,x):
         return self.modules.__getitem__(x)

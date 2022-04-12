@@ -81,12 +81,7 @@ def get_setup_args(bypass=False):
                         default=True,
                         help='Process examples from the test set')
 
-    if bypass:
-        args = parser.parse_args('')
-    else:
-        args = parser.parse_args()
-        
-    return args
+    return parser.parse_args('') if bypass else parser.parse_args()
 
 
 def get_train_args():

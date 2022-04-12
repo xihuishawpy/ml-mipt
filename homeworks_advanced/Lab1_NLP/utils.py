@@ -27,7 +27,7 @@ def generate_translation(src, trg, model, TRG_vocab):
 
     original = get_text(list(trg[:,0].cpu().numpy()), TRG_vocab)
     generated = get_text(list(output[1:, 0]), TRG_vocab)
-    
-    print('Original: {}'.format(' '.join(original)))
-    print('Generated: {}'.format(' '.join(generated)))
+
+    print(f"Original: {' '.join(original)}")
+    print(f"Generated: {' '.join(generated)}")
     print()

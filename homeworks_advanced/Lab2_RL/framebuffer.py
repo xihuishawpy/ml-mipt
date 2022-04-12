@@ -13,7 +13,10 @@ class FrameBuffer(Wrapper):
             n_channels, height, width = env.observation_space.shape
             obs_shape = [n_channels * n_frames, height, width]
         else:
-            raise ValueError('dim_order should be "tensorflow" or "pytorch", got {}'.format(dim_order))
+            raise ValueError(
+                f'dim_order should be "tensorflow" or "pytorch", got {dim_order}'
+            )
+
         self.observation_space = Box(0.0, 1.0, obs_shape)
         self.framebuffer = np.zeros(obs_shape, 'float32')
         

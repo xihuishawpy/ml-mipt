@@ -69,8 +69,7 @@ def main(args):
     eval_file = vars(args)[f'{args.split}_eval_file']
     with open(eval_file, 'r') as fh:
         gold_dict = json_load(fh)
-    with torch.no_grad(), \
-            tqdm(total=len(dataset)) as progress_bar:
+    with torch.no_grad(), tqdm(total=len(dataset)) as progress_bar:
         for cw_idxs, cc_idxs, qw_idxs, qc_idxs, y1, y2, ids in data_loader:
             # Setup for forward
             cw_idxs = cw_idxs.to(device)
@@ -98,8 +97,8 @@ def main(args):
                                                       starts.tolist(),
                                                       ends.tolist(),
                                                       args.use_squad_v2)
-            pred_dict.update(idx2pred)
-            sub_dict.update(uuid2pred)
+            pred_dict |= idx2pred
+            sub_dict |= uuid2pred
 
     # Log results (except for test set, since it does not come with labels)
     if args.split != 'test':
@@ -125,7 +124,7 @@ def main(args):
                        num_visuals=args.num_visuals)
 
     # Write submission file
-    sub_path = join(args.save_dir, args.split + '_' + args.sub_file)
+    sub_path = join(args.save_dir, f'{args.split}_{args.sub_file}')
     log.info(f'Writing submission file to {sub_path}...')
     with open(sub_path, 'w', newline='', encoding='utf-8') as csv_fh:
         csv_writer = csv.writer(csv_fh, delimiter=',')

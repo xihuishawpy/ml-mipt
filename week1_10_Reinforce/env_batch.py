@@ -12,14 +12,12 @@ class SpaceBatch(Space):
     first_dtype = spaces[0].dtype
     for space in spaces:
       if not isinstance(space, first_type):
-        raise TypeError("spaces have different types: {}, {}"
-                        .format(first_type, type(space)))
+        raise TypeError(f"spaces have different types: {first_type}, {type(space)}")
       if first_shape != space.shape:
-        raise ValueError("spaces have different shapes: {}, {}"
-                         .format(first_shape, space.shape))
+        raise ValueError(f"spaces have different shapes: {first_shape}, {space.shape}")
       if first_dtype != space.dtype:
-        raise ValueError("spaces have different data types: {}, {}"
-                         .format(first_dtype, space.dtype))
+        raise ValueError(
+            f"spaces have different data types: {first_dtype}, {space.dtype}")
 
     self.spaces = spaces
     super(SpaceBatch, self).__init__(shape=self.spaces[0].shape,
@@ -62,11 +60,10 @@ class EnvBatch(Env):
     return self._envs
 
   def _check_actions(self, actions):
-    if not len(actions) == self.nenvs:
+    if len(actions) != self.nenvs:
       raise ValueError(
-          "number of actions is not equal to number of envs: "
-          "len(actions) = {}, nenvs = {}"
-          .format(len(actions), self.nenvs))
+          f"number of actions is not equal to number of envs: len(actions) = {len(actions)}, nenvs = {self.nenvs}"
+      )
 
   def step(self, actions):
     self._check_actions(actions)
@@ -132,7 +129,7 @@ def worker(parent_connection, worker_connection, make_env_function,
       worker_connection.close()
       break
     else:
-      raise NotImplementedError("Unknown command %s" % cmd)
+      raise NotImplementedError(f"Unknown command {cmd}")
 
 
 class ParallelEnvBatch(EnvBatch):
@@ -147,14 +144,14 @@ class ParallelEnvBatch(EnvBatch):
     ])
     self._processes = [
         Process(
-          target=worker,
-          args=(parent_connection, worker_connection, make_env),
-          daemon=True
+            target=worker,
+            args=(parent_connection, worker_connection, make_env),
+            daemon=True,
+        ) for parent_connection, worker_connection, make_env in zip(
+            self._parent_connections,
+            self._worker_connections,
+            make_env_functions,
         )
-        for i, (parent_connection, worker_connection, make_env)
-        in enumerate(zip(self._parent_connections,
-                         self._worker_connections,
-                         make_env_functions))
     ]
     for p in self._processes:
       p.start()
@@ -198,4 +195,4 @@ class ParallelEnvBatch(EnvBatch):
     self._closed = True
 
   def render(self):
-    raise ValueError("render not defined for %s" % self)
+    raise ValueError(f"render not defined for {self}")

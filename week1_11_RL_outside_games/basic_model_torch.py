@@ -32,7 +32,7 @@ class BasicTranslationModel(nn.Module):
         # select last element w.r.t. mask
         end_index = infer_length(inp, self.inp_voc.eos_ix)
         end_index[end_index >= inp.shape[1]] = inp.shape[1] - 1
-        enc_last = enc_seq[range(0, enc_seq.shape[0]), end_index.detach(), :]
+        enc_last = enc_seq[range(enc_seq.shape[0]), end_index.detach(), :]
 
         dec_start = self.dec_start(enc_last)
         return [dec_start]
